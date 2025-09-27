@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ food.food_name }}</h1>
+<img src="{{ food.image.url }}" alt="{{ food.food_name }}" width="200">
+<p><strong>Category:</strong> {{ food.category }}</p>
+<p><strong>Sub Category:</strong> {{ food.sub_category }}</p>
+<p><strong>Price:</strong> ₹{{ food.price }}</p>
+<p><strong>Description:</strong> {{ food.description }}</p>
+<p><strong>Calories:</strong> {{ food.calories }}</p>
+
+<a href="{% url 'place_order' food.id %}">Order Now</a>
+
+<h2>Ingredients</h2>
+<ul>
+  {% for ingredient in food.ingredients.all %}
+    <li>{{ ingredient.name }} {% if ingredient.is_allergen %}(Allergen){% endif %}</li>
+  {% endfor %}
+</ul>
+
+<h2>Recipes</h2>
+<ul>
+  {% for recipe in food.recipes.all %}
+    <li>{{ recipe.instructions }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

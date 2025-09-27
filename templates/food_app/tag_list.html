@@ -1,0 +1,35 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Tags</h2>
+    <a href="{% url 'add_tag' %}" class="btn btn-success">+ Add Tag</a>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Foods Count</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tag in tags %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ tag.name }}</td>
+            <td>{{ tag.foods.count }}</td>
+            <td>
+                <a href="{% url 'edit_tag' tag.id %}" class="btn btn-sm btn-primary">Edit</a>
+                <a href="{% url 'delete_tag' tag.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this tag?');">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center text-muted">No tags found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

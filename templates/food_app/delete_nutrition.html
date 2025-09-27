@@ -1,0 +1,11 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<div class="alert alert-danger">
+    <h4>Are you sure you want to delete nutrition data for "{{ nutrition.food.food_name }}"?</h4>
+    <form method="POST">
+        {% csrf_token %}
+        <a href="{% url 'admin_nutrition' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+</div>
+{% endblock %}

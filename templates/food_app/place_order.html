@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container my-4">
+  <div class="row">
+    <!-- Food Image -->
+    <div class="col-md-5">
+      {% if food.image %}
+        <img src="{{ food.image.url }}" class="img-fluid rounded shadow" alt="{{ food.food_name }}">
+      {% else %}
+        <img src="{% static 'images/no-image.png' %}" class="img-fluid rounded shadow" alt="No image">
+      {% endif %}
+    </div>
+
+    <!-- Food Details -->
+    <div class="col-md-7">
+      <h2 class="fw-bold">{{ food.food_name }}</h2>
+      <p class="text-muted mb-2">{{ food.get_category_display }}</p>
+      <p>{{ food.description }}</p>
+      <h4 class="text-success fw-bold">₹{{ food.price }}</h4>
+
+      <!-- Nutrition Facts -->
+      {% if food.nutrition %}
+      <div class="mt-4">
+        <h5>Nutrition Facts (per serving)</h5>
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Protein</span> <strong>{{ food.nutrition.protein }} g</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Carbs</span> <strong>{{ food.nutrition.carbs }} g</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Fats</span> <strong>{{ food.nutrition.fats }} g</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Fiber</span> <strong>{{ food.nutrition.fiber }} g</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Sugar</span> <strong>{{ food.nutrition.sugar }} g</strong>
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- Order Form -->
+      <form method="POST" class="mt-4">
+        {% csrf_token %}
+        <div class="input-group mb-3" style="max-width: 220px;">
+          <button class="btn btn-outline-secondary" type="button" id="decrease">
+            <i class="bi bi-dash-lg"></i>
+          </button>
+          <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control text-center">
+          <button class="btn btn-outline-secondary" type="button" id="increase">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
+        <button type="submit" class="btn btn-primary">Place Order</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Quantity Button Script -->
+<script>
+  document.getElementById('increase').addEventListener('click', function() {
+    let qty = document.getElementById('quantity');
+    qty.value = parseInt(qty.value) + 1;
+  });
+
+  document.getElementById('decrease').addEventListener('click', function() {
+    let qty = document.getElementById('quantity');
+    if (parseInt(qty.value) > 1) {
+      qty.value = parseInt(qty.value) - 1;
+    }
+  });
+</script>
+
+{% endblock %}

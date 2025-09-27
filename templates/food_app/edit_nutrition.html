@@ -1,0 +1,18 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">{% if nutrition %}Edit{% else %}Add{% endif %} Nutrition</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'admin_nutrition' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-success">{% if nutrition %}Update{% else %}Add{% endif %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

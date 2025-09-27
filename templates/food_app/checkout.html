@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container my-4">
+  <div class="card p-4">
+    <h4>Complete Payment</h4>
+    <p>Order #{{ order.id }} — Amount: ₹{{ order.total_price }}</p>
+    <button id="rzp-button" class="btn btn-primary">Pay with Razorpay</button>
+  </div>
+</div>
+
+<!-- Razorpay checkout script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+  // Build safe prefill values using Django conditionals and escapejs
+  {% if request.user.is_authenticated %}
+    const prefillName = "{{ request.user.get_full_name|default:request.user.username|escapejs }}";
+    const prefillEmail = "{{ request.user.email|default:''|escapejs }}";
+  {% else %}
+    const prefillName = "";
+    const prefillEmail = "";
+  {% endif %}
+
+  const options = {
+    "key": "{{ razorpay_key_id }}",
+    "amount": "{{ amount }}", // amount in paise
+    "currency": "{{ currency }}",
+    "name": "{{ site_name|default:'Food App'|escapejs }}",
+    "description": "Order #{{ order.id }}",
+    "order_id": "{{ razorpay_order_id }}", // Razorpay order id created on server
+    "handler": function (response){
+        // send payment details to server for verification
+        const data = new FormData();
+        data.append('razorpay_payment_id', response.razorpay_payment_id);
+        data.append('razorpay_order_id', response.razorpay_order_id);
+        data.append('razorpay_signature', response.razorpay_signature);
+
+        fetch("{% url 'payment_success' order.id %}", {
+            method: "POST",
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: data,
+            credentials: 'same-origin'
+        })
+        .then(resp => resp.json())
+        .then(json => {
+          if (json.status === 'success') {
+            window.location.href = "{% url 'order_success' order.id %}";
+          } else {
+            alert('Payment verification failed: ' + (json.message || ''));
+            window.location.href = "{% url 'order_failure' order.id %}";
+          }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Payment failed — please contact support.');
+        });
+    },
+    "prefill": {
+      name: prefillName,
+      email: prefillEmail
+    },
+    "theme": {
+      "color": "#0d6efd"
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  document.getElementById('rzp-button').onclick = function(e){
+    rzp.open();
+    e.preventDefault();
+  }
+</script>
+{% endblock %}

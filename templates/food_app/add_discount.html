@@ -1,0 +1,122 @@
+{% extends "admin_base.html" %}
+{% load static %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  .discount-card { max-width: 980px; margin: 20px auto; border-radius: .5rem; }
+  .form-section { padding: 1rem; }
+  .foods-box { max-height: 220px; overflow:auto; border:1px solid #e9ecef; padding: .5rem; border-radius:.375rem; }
+  .small-help { font-size:.86rem; color:#6c757d; }
+  .error-text { color:#d63384; font-size:.9rem; }
+</style>
+
+<div class="card shadow-sm discount-card">
+  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-0">{% if edit %}Edit Discount{% else %}Add Discount{% endif %}</h5>
+      <small class="text-white-50">Manage promo codes and validity</small>
+    </div>
+    <div>
+      <a href="{% url 'admin_discount' %}" class="btn btn-outline-light btn-sm">Back</a>
+    </div>
+  </div>
+
+  <div class="card-body form-section">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div class="row g-3">
+        <!-- left column -->
+        <div class="col-lg-7">
+          <div class="mb-3">
+            <label class="form-label">{{ form.code.label }}</label>
+            {{ form.code }}
+            {% if form.code.errors %}<div class="error-text">{{ form.code.errors|striptags }}</div>{% else %}
+              <div class="small-help">Unique discount code (no spaces). Example: SPRING20</div>
+            {% endif %}
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">{{ form.percentage.label }}</label>
+              {{ form.percentage }}
+              {% if form.percentage.errors %}<div class="error-text">{{ form.percentage.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="col-6 d-flex align-items-end">
+              <div class="form-check">
+                {{ form.active }}
+                <label class="form-check-label ms-2">{{ form.active.label }}</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-sm-6">
+              <label class="form-label">{{ form.valid_from.label }}</label>
+              {{ form.valid_from }}
+              {% if form.valid_from.errors %}<div class="error-text">{{ form.valid_from.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">{{ form.valid_to.label }}</label>
+              {{ form.valid_to }}
+              {% if form.valid_to.errors %}<div class="error-text">{{ form.valid_to.errors|striptags }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.foods.label }}</label>
+            <div class="foods-box">
+              {{ form.foods }}
+            </div>
+            {% if form.foods.errors %}<div class="error-text">{{ form.foods.errors|striptags }}</div>{% else %}
+              <div class="small-help mt-1">Select foods this discount applies to. Leave empty to apply to all foods.</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="error-text">{{ form.description.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        <!-- right column: preview and actions -->
+        <div class="col-lg-5">
+          <div class="card mb-3">
+            <div class="card-body">
+              <h6 class="card-title mb-2">Preview</h6>
+
+              <p class="mb-1"><strong>Code:</strong> <span class="ms-2">{{ form.code.value|default:"—" }}</span></p>
+              <p class="mb-1"><strong>Discount:</strong> <span class="ms-2">{{ form.percentage.value|default:"—" }}%</span></p>
+              <p class="mb-1"><strong>Valid:</strong>
+                <span class="ms-2">{{ form.valid_from.value|default:"—" }} → {{ form.valid_to.value|default:"—" }}</span>
+              </p>
+              <p class="mb-1"><strong>Active:</strong>
+                <span class="ms-2">{% if form.active.value %}Yes{% else %}No{% endif %}</span>
+              </p>
+
+              <hr>
+
+              <h6 class="mb-2">Selected Foods</h6>
+              <div class="small-help">Selected foods are shown in the form (left). Save to persist.</div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <a href="{% url 'admin_discount' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">{% if edit %}Update Discount{% else %}Add Discount{% endif %}</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

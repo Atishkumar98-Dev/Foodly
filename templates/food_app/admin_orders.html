@@ -1,0 +1,36 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<h2>Orders</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>User</th>
+            <th>Food</th>
+            <th>Quantity</th>
+            <th>Total Price</th>
+            <th>Status</th>
+            <th>Ordered At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.user.username }}</td>
+            <td>{{ order.food.food_name }}</td>
+            <td>{{ order.quantity }}</td>
+            <td>₹{{ order.total_price }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.ordered_at }}</td>
+            <td>
+                <a href="{% url 'update_order_status' order.id %}" class="btn btn-sm btn-primary">Update Status</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">No orders found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

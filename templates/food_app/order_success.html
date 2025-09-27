@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container text-center my-5">
+  <div class="alert alert-success p-4 shadow">
+    <h2>✅ Payment Successful!</h2>
+    <p>{{ message }}</p>
+    <p><strong>Order ID:</strong> {{ order.id }}</p>
+    <a href="{% url 'food_list' %}" class="btn btn-primary mt-3">Back to Foods</a>
+  </div>
+</div>
+<h1>Order Placed Successfully!</h1>
+<p>Order ID: {{ order.id }}</p>
+<p>Food: {{ order.food.food_name }}</p>
+<p>Quantity: {{ order.quantity }}</p>
+<p>Total Price: ₹{{ order.total_price }}</p>
+<p>Status: {{ order.status }}</p>
+<a href="{% url 'food_list' %}">Back to Foods</a>
+
+
+
+{% endblock %}

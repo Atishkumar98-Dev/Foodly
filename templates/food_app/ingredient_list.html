@@ -1,0 +1,46 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Ingredients</h2>
+        <a href="{% url 'add_ingredient' %}" class="btn btn-success">+ Add Ingredient</a>
+    </div>
+
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Foods Count</th>
+                <th>Allergen</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ingredient in ingredients %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ ingredient.name }}</td>
+                <td>{{ ingredient.foods.count }}</td>
+                <td>
+                    {% if ingredient.is_allergen %}
+                    <span class="badge bg-danger">Yes</span>
+                    {% else %}
+                    <span class="badge bg-success">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'edit_ingredient' ingredient.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_ingredient' ingredient.id %}" class="btn btn-sm btn-danger" 
+                       onclick="return confirm('Delete this ingredient?');">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted">No ingredients found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

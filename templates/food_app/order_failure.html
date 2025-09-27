@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container text-center my-5">
+  <div class="alert alert-danger p-4 shadow">
+    <h2>❌ Payment Failed</h2>
+    <p>{{ message }}</p>
+    <p><strong>Order ID:</strong> {{ order.id }}</p>
+    <a href="{% url 'food_list' %}" class="btn btn-warning mt-3">Try Again</a>
+  </div>
+</div>
+{% endblock %}

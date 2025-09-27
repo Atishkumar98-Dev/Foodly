@@ -1,0 +1,49 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Discounts</h2>
+    <a href="{% url 'add_discount' %}" class="btn btn-success">+ Add Discount</a>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Code</th>
+            <th>Percentage</th>
+            <th>Active</th>
+            <th>Valid From</th>
+            <th>Valid To</th>
+            <th>Foods Count</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for discount in discounts %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ discount.code }}</td>
+            <td>{{ discount.percentage }}%</td>
+            <td>
+                {% if discount.active %}
+                <span class="badge bg-success">Yes</span>
+                {% else %}
+                <span class="badge bg-danger">No</span>
+                {% endif %}
+            </td>
+            <td>{{ discount.valid_from }}</td>
+            <td>{{ discount.valid_to }}</td>
+            <td>{{ discount.foods.count }}</td>
+            <td>
+                <a href="{% url 'edit_discount' discount.id %}" class="btn btn-sm btn-primary">Edit</a>
+                <a href="{% url 'delete_discount' discount.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this discount?');">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" class="text-center text-muted">No discounts found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

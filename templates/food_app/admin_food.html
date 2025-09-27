@@ -1,0 +1,71 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<h2>All Foods</h2>
+<a href="{% url 'add_food' %}" class="btn btn-primary mb-3">Add New Food</a>
+
+<table class="table table-striped table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Sub Category</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Calorie</th>
+            <th>Ingredients</th>
+            <th>Nutrition</th>
+            <th>Tags</th>
+            <th>Available</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for food in foods %}
+        <tr>
+            <td>
+                {% if food.image %}
+                    <img src="{{ food.image.url }}" alt="{{ food.food_name }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;">
+                {% else %}
+                    <span class="text-muted">No Image</span>
+                {% endif %}
+            </td>
+            <td>{{ food.food_name }}</td>
+            <td>{{ food.category }}</td>
+            <td>{{ food.sub_category }}</td>
+            <td>{{ food.types }}</td>
+            <td>₹{{ food.price }}</td>
+            <td>{{ food.calories }}</td>
+            <td>{{ food.ingredients.count }}</td>
+            <td>
+                {% if food.nutrition %}
+                    P:{{ food.nutrition.protein }}g C:{{ food.nutrition.carbs }}g F:{{ food.nutrition.fats }}g
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+            <td>
+                {% for tag in food.tags.all %}
+                    <span class="badge bg-primary text-light">{{ tag.name }}</span>
+                {% empty %}
+                    -
+                {% endfor %}
+            </td>
+            <td>
+                {% if food.available %}
+                    <span class="badge bg-success">Yes</span>
+                {% else %}
+                    <span class="badge bg-danger">No</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'edit_food' food.id %}" class="btn btn-sm btn-warning">Edit</a>
+                <a href="{% url 'delete_food' food.id %}" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="11">No foods found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

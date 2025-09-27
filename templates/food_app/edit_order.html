@@ -1,0 +1,62 @@
+{% extends "admin_base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mt-4" style="max-width:900px;">
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-0">Edit Order #{{ order.id }}</h5>
+        <small class="text-muted">User: {{ order.user.username }} — Placed: {{ order.ordered_at|date:"d M Y, H:i" }}</small>
+      </div>
+      <div>
+        <a href="{% url 'admin_order' %}" class="btn btn-outline-secondary btn-sm">Back to Orders</a>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if messages %}
+          {% for m in messages %}
+            <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+          {% endfor %}
+        {% endif %}
+
+        {{ form.non_field_errors }}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Food</label>
+            {{ form.food }}
+            {% if form.food.errors %}<div class="text-danger small">{{ form.food.errors|striptags }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Quantity</label>
+            {{ form.quantity }}
+            {% if form.quantity.errors %}<div class="text-danger small">{{ form.quantity.errors|striptags }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            {{ form.status }}
+            {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors|striptags }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Delivered At (optional)</label>
+            {{ form.delivered_at }}
+            {% if form.delivered_at.errors %}<div class="text-danger small">{{ form.delivered_at.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+          <a href="{% url 'admin_order' %}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

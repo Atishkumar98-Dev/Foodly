@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- ====== Styles (Bootstrap used from base; additional CSS below) ====== -->
+<style>
+  :root{
+    --accent: #0d6efd;
+    --muted: #6c757d;
+    --card-radius: 12px;
+  }
+
+  .page-container{
+    margin: 28px auto;
+    max-width: 1200px;
+    padding: 0 16px;
+  }
+
+  .hero {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    margin-bottom: 18px;
+  }
+  .hero .title {
+    margin:0;
+  }
+  .hero .subtitle { color: var(--muted); font-size: .95rem; margin-top:4px; }
+
+  .search-row {
+    display:flex;
+    gap:.5rem;
+    align-items:center;
+  }
+  .search-row .form-control { min-width:220px; }
+
+  /* Grid and cards */
+  .grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .card-food {
+    border: 1px solid #e9ecef;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    background: #fff;
+    transition: transform .18s ease, box-shadow .18s ease;
+    display:flex;
+    flex-direction:column;
+    min-height: 100%;
+  }
+  .card-food:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(15,23,42,0.07);
+  }
+
+  .media {
+    height:160px;
+    background: linear-gradient(180deg, #fafbfd, #f8fafc);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    position:relative;
+  }
+  .media img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  .badge-cat {
+    position:absolute;
+    left:12px;
+    top:12px;
+    background: rgba(0,0,0,0.6);
+    color:#fff;
+    padding:.28rem .5rem;
+    border-radius:8px;
+    font-size:.78rem;
+  }
+
+  .card-body-food{
+    padding: .85rem;
+    display:flex;
+    flex-direction:column;
+    gap:.45rem;
+    flex:1 1 auto;
+  }
+
+  .food-name { font-size:1.02rem; font-weight:600; margin:0; color:#0f1724; }
+  .food-desc { color:var(--muted); font-size:.92rem; min-height:2.1em; overflow:hidden; }
+  .food-meta { display:flex; justify-content:space-between; align-items:center; gap:.5rem; margin-top:auto; }
+  .price-pill {
+    background: linear-gradient(90deg,#198754,#1cc88a);
+    color:#fff; padding:.33rem .65rem; border-radius:8px; font-weight:700;
+  }
+
+  .tags { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.4rem; }
+  .tag { background:#f1f3f5; color:#212529; padding:.22rem .45rem; border-radius:999px; font-size:.78rem; }
+
+  /* Empty / fallback */
+  .no-items {
+    text-align:center; padding:48px 10px; color:var(--muted);
+  }
+
+  /* Pagination area */
+  .pagination-wrap { margin-top:20px; display:flex; justify-content:center; }
+
+  /* Quick view modal tweaks */
+  .modal-food-img { width:100%; height:240px; object-fit:cover; border-radius:8px; }
+  @media (max-width:575px){
+    .media { height:140px; }
+    .modal-food-img { height:180px; }
+  }
+</style>
+
+<!-- ====== Page ====== -->
+<div class="page-container">
+  <div class="hero">
+    <div>
+      <h1 class="title h4">Available Foods</h1>
+      <div class="subtitle">Browse delicious items. Order or preview quickly.</div>
+    </div>
+
+    <form method="get" class="search-row" role="search" aria-label="Search foods">
+      <input name="q" value="{{ request.GET.q|default:'' }}" class="form-control form-control-sm" type="search" placeholder="Search foods, tags or category">
+      <button class="btn btn-sm btn-outline-primary" type="submit">Search</button>
+    </form>
+  </div>
+
+  {% if foods %}
+  <div class="grid">
+    {% for food in foods %}
+    <article class="card-food" 
+             data-id="{{ food.id }}"
+             data-name="{{ food.food_name|escapejs }}"
+             data-desc="{{ food.description|default:'No description.'|escapejs }}"
+             data-price="{{ food.price }}"
+             data-img="{% if food.image %}{{ food.image.url }}{% else %}{% static 'images/no-image.png' %}{% endif %}">
+      <div class="media">
+        <span class="badge-cat">{{ food.get_category_display }}</span>
+        {% if food.image %}
+          <img src="{{ food.image.url }}" alt="{{ food.food_name }}" loading="lazy">
+        {% else %}
+          <img src="{% static 'images/no-image.png' %}" alt="No image" loading="lazy">
+        {% endif %}
+      </div>
+
+      <div class="card-body-food">
+        <div>
+          <a href="{% url 'food_detail' food.id %}" class="text-decoration-none text-dark">
+            <h3 class="food-name">{{ food.food_name }}</h3>
+          </a>
+          <p class="food-desc">{{ food.description|truncatechars:110 }}</p>
+          <span class="price-pill">₹{{ food.price }}</span>
+          {% if food.available %}
+              <span class="badge bg-success">Available</span>
+            {% else %}
+              <span class="badge bg-danger">Unavailable</span>
+            {% endif %}
+        </div>
+
+        <div class="tags">
+          
+          {% for tag in food.tags.all %}
+            <span class="tag">{{ tag.name }}</span>
+          {% empty %}
+            <span class="tag">No tags</span>
+          {% endfor %}
+          <small class="ms-2 text-muted">{{ food.calories|default:"—" }} kcal</small>
+          
+        </div>
+
+        <div class="food-meta">
+          <div>
+            
+            <button type="button" class="btn btn-sm btn-outline-secondary quick-view-btn" data-bs-toggle="modal" data-bs-target="#quickViewModal">Quick View</button>
+          </div>
+
+          <div class="d-flex align-items-center">
+            
+            <div class="ms-2">
+              <a href="{% url 'place_order' food.id %}" class="btn btn-sm btn-primary ms-1">Order</a>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination (keeping your existing context variables) -->
+  {% if is_paginated %}
+  <div class="pagination-wrap">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+      {% endif %}
+
+      {% for num in paginator.page_range %}
+        {% if num == page_obj.number %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="no-items">
+    <img src="{% static 'images/empty_foods.svg' %}" alt="No foods" style="max-width:180px; opacity:.6; margin-bottom:12px;">
+    <h4>No foods available</h4>
+    <p class="text-muted">Add items from the admin dashboard to populate this page.</p>
+    <a href="{% url 'admin_food' %}" class="btn btn-outline-primary mt-2">Go to Admin</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ====== Quick View Modal ====== -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="qv-title">Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <img id="qv-img" src="{% static 'images/no-image.png' %}" alt="Image" class="modal-food-img">
+          </div>
+          <div class="col-md-6">
+            <p id="qv-cat" class="small text-muted mb-2"></p>
+            <p id="qv-desc" class="mb-3"></p>
+            <p><strong>Price: </strong><span id="qv-price" class="text-success"></span></p>
+            <a id="qv-order" href="#" class="btn btn-primary">Order Now</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Scripts (Bootstrap bundle assumed in base; include small JS) ====== -->
+<script>
+  // Quick View: populate modal using data-* attributes on card
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.quick-view-btn');
+    if (!btn) return;
+    const card = btn.closest('.card-food');
+    if (!card) return;
+
+    const id = card.dataset.id || '';
+    const name = card.dataset.name || '';
+    const desc = card.dataset.desc || '';
+    const price = card.dataset.price || '';
+    const img = card.dataset.img || '';
+
+    document.getElementById('qv-title').textContent = name;
+    document.getElementById('qv-desc').textContent = desc;
+    document.getElementById('qv-price').textContent = '₹' + price;
+    document.getElementById('qv-img').src = img;
+    // Update category if present
+    const cat = card.querySelector('.badge-cat') ? card.querySelector('.badge-cat').textContent : '';
+    document.getElementById('qv-cat').textContent = cat;
+
+    // Set order link (no Python change here — keep same URL pattern)
+    document.getElementById('qv-order').href = "{% url 'place_order' 0 %}".replace('/0/', '/' + id + '/');
+  });
+</script>
+
+{% endblock %}

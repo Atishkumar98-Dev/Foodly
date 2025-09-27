@@ -1,0 +1,77 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">{% if edit %}Edit{% else %}Add New{% endif %} Food</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        {{ form.food_name.label_tag }}
+                        {{ form.food_name }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.category.label_tag }}
+                        {{ form.category }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.sub_category.label_tag }}
+                        {{ form.sub_category }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.types.label_tag }}
+                        {{ form.types }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.calories.label_tag }}
+                        {{ form.calories }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.price.label_tag }}
+                        {{ form.price }}
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-3">
+                            {{ form.available }}
+                            {{ form.available.label_tag }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.image.label_tag }}
+                        {{ form.image }}
+                        {% if edit and food.image %}
+                        <img src="{{ food.image.url }}" class="img-thumbnail mt-2" style="width:120px;">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-12">
+                        {{ form.description.label_tag }}
+                        {{ form.description }}
+                    </div>
+
+                    {% if form.ingredients %}
+                    <div class="col-md-6">
+                        {{ form.ingredients.label_tag }}
+                        {{ form.ingredients }}
+                    </div>
+                    {% endif %}
+
+                    {% if form.tags %}
+                    <div class="col-md-6">
+                        {{ form.tags.label_tag }}
+                        {{ form.tags }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 d-flex justify-content-between">
+                    <a href="{% url 'admin_food' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">{% if edit %}Update{% else %}Add Food{% endif %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Your Meal Plans</h1>
+<div class="meal-plans">
+  {% for plan in plans %}
+    <div class="plan">
+      <p>From: {{ plan.start_date }} To: {{ plan.end_date }}</p>
+      <ul>
+        {% for food in plan.foods.all %}
+          <li>{{ food.food_name }} - ₹{{ food.price }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% empty %}
+    <p>No meal plans yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

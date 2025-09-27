@@ -1,0 +1,20 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<h2>Menus</h2>
+<div class="row">
+    {% for menu in menus %}
+    <div class="col-md-6 mb-3">
+        <div class="card p-3">
+            <h5>{{ menu.name }} - {{ menu.date }}</h5>
+            <ul>
+                {% for food in menu.foods.all %}
+                <li>{{ food.food_name }} - ₹{{ food.price }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% empty %}
+    <p>No menus available.</p>
+    {% endfor %}
+</div>
+{% endblock %}

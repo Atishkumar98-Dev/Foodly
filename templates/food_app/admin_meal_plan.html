@@ -1,0 +1,21 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<h2>User Meal Plans</h2>
+<div class="row">
+    {% for plan in plans %}
+    <div class="col-md-6 mb-3">
+        <div class="card p-3">
+            <p><strong>User:</strong> {{ plan.user.username }}</p>
+            <p><strong>From:</strong> {{ plan.start_date }} <strong>To:</strong> {{ plan.end_date }}</p>
+            <ul>
+                {% for food in plan.foods.all %}
+                <li>{{ food.food_name }} - ₹{{ food.price }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% empty %}
+    <p>No meal plans found.</p>
+    {% endfor %}
+</div>
+{% endblock %}
