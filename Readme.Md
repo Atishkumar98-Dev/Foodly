@@ -84,8 +84,8 @@ python manage.py runserver
 Create a `.env` file in the root directory:
 
 ```env
-RAZORPAY_KEY_ID=rzp_test_RMiHiWbJTpiKLz
-RAZORPAY_KEY_SECRET=cX1BYL2Bkan9tyWIKmcfB42c
+RAZORPAY_KEY_ID='xxxx'
+RAZORPAY_KEY_SECRET='xxxxx'
 DATABASE_NAME=Foodly_DB
 DATABASE_USER=postgres
 DATABASE_PASSWORD=newpassword
