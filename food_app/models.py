@@ -146,6 +146,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=ORDER_STATUS, default='PENDING')
     ordered_at = models.DateTimeField(auto_now_add=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
+    order_ref = models.CharField(max_length=30, unique=True, blank=True, null=True, db_index=True)
     razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=255, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
@@ -190,3 +191,38 @@ class Allergy(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+class CartItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart_items')
+    food = models.ForeignKey(Food, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'food')  # so same food doesn't repeat
+
+    def __str__(self):
+        return f"{self.food.food_name} x {self.quantity} for {self.user.username}"
+
+    @property
+    def total_price(self):
+        return self.food.price * self.quantity
+    
+
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart_item')
+    food = models.ForeignKey('Food', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'food')  # prevents duplicates
+
+    def __str__(self):
+        return f"{self.food.food_name} x {self.quantity} for {self.user.username}"
+
+    @property
+    def total_price(self):
+        return self.food.price * self.quantity

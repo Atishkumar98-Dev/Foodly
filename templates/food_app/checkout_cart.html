@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container my-5">
+
+    <h2 class="fw-bold mb-4 text-center">🛒 Your Cart</h2>
+
+    {% if cart_items %}
+    <div class="row g-4">
+        <!-- Cart Items (Left Side) -->
+        <div class="col-lg-8">
+            {% for item in cart_items %}
+            <div class="card border-0 shadow-sm rounded-3 p-3 d-flex flex-row align-items-center mb-3">
+                <!-- Food Image -->
+                {% if item.food.image %}
+                    <img src="{{ item.food.image.url }}" alt="{{ item.food.food_name }}"
+                         class="rounded me-3"
+                         style="width:90px; height:90px; object-fit:cover;">
+                {% else %}
+                    <img src="{% static 'images/no-image.png' %}" alt="No image"
+                         class="rounded me-3"
+                         style="width:90px; height:90px; object-fit:cover;">
+                {% endif %}
+
+                <!-- Food Info -->
+                <div class="flex-grow-1">
+                    <h5 class="fw-semibold mb-1">{{ item.food.food_name }}</h5>
+                    <p class="mb-1 text-muted">₹{{ item.food.price }} each</p>
+
+                    <!-- Quantity Control -->
+                    <form action="{% url 'update_cart_quantity' item.id %}" method="POST" class="d-flex align-items-center">
+                        {% csrf_token %}
+                        <button type="submit" name="decrease" class="btn btn-sm btn-outline-dark">-</button>
+                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
+                               class="form-control form-control-sm text-center mx-2" style="width:65px;">
+                        <button type="submit" name="increase" class="btn btn-sm btn-outline-dark">+</button>
+                    </form>
+                </div>
+
+                <!-- Price + Remove -->
+                <div class="text-end">
+                    <h6 class="fw-bold text-success mb-2">₹{{ item.total_price }}</h6>
+                    <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-sm btn-outline-danger">
+                        ✕ Remove
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sticky Cart Summary (Right Side) -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg rounded-3 sticky-top" style="top: 90px;">
+                <div class="card-body">
+                    <h4 class="fw-bold mb-3">Cart Summary</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span>₹{{ cart_total }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Delivery</span>
+                        <span class="text-success">Free</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="fw-bold">Total</span>
+                        <span class="fw-bold text-success fs-5">₹{{ cart_total }}</span>
+                    </div>
+
+                    <!-- Fancy Pay Button -->
+                    <button id="rzp-button" 
+                            class="btn w-100 py-3 fw-bold text-white shadow-sm mb-3"
+                            style="background: linear-gradient(135deg, #0d6efd, #6610f2); border: none; border-radius: 12px; font-size: 1.1rem;">
+                        💳 Pay Securely with Razorpay
+                    </button>
+
+                    <!-- Continue Shopping Button -->
+                    <a href="{% url 'food_list' %}" 
+                       class="btn w-100 py-2 fw-semibold btn-outline-secondary rounded-3">
+                        ← Continue Shopping
+                    </a>
+
+                    <p class="text-muted small text-center mt-3">Safe & encrypted payment gateway</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Razorpay JS -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const options = {
+        key: "{{ razorpay_key_id }}",
+        amount: {{ razorpay_amount }},
+        currency: "INR",
+        name: "Foodly",
+        description: "Cart Payment",
+        order_id: "{{ razorpay_order_id }}",
+        handler: function(response) {
+          const data = new FormData();
+          data.append('razorpay_payment_id', response.razorpay_payment_id);
+          data.append('razorpay_order_id', response.razorpay_order_id);
+          data.append('razorpay_signature', response.razorpay_signature);
+
+          fetch("{% url 'cart_payment_success' %}", {
+            method: "POST",
+            body: data,
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+          .then(resp => resp.json())
+          .then(json => {
+            if (json.status === 'success') {
+              const paymentId = encodeURIComponent(json.payment_id || '');
+              window.location.href = "{% url 'cart_success' %}?payment_id=" + paymentId;
+            } else {
+              alert('Payment verification failed: ' + (json.message || ''));
+              window.location.href = "{% url 'checkout_cart' %}";
+            }
+          })
+          .catch(err => {
+            console.error('Verification error', err);
+            alert('Payment verification error. Please contact support.');
+            window.location.href = "{% url 'checkout_cart' %}";
+          });
+        },
+        prefill: {
+          name: "{{ request.user.get_full_name|default:request.user.username|escapejs }}",
+          email: "{{ request.user.email|default:''|escapejs }}"
+        },
+        theme: { color: "#0d6efd" }
+      };
+
+      const rzp = new Razorpay(options);
+      document.getElementById('rzp-button').addEventListener('click', function(e) {
+        rzp.open();
+        e.preventDefault();
+      });
+    });
+    </script>
+
+    {% else %}
+    <!-- Empty Cart -->
+    <div class="text-center py-5">
+        <img src="{% static 'images/empty_cart.svg' %}" alt="Empty Cart"
+             style="max-width:220px; opacity:.7;">
+        <h3 class="mt-3 fw-semibold">Your cart is empty</h3>
+        <p class="text-muted">Looks like you haven’t added anything yet.</p>
+        <a href="{% url 'food_list' %}" class="btn btn-lg btn-primary mt-3">
+            🍴 Browse Foods
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

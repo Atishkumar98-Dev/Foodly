@@ -1,13 +1,58 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<div class="container my-4">
-  <div class="card p-4">
-    <h4>Complete Payment</h4>
-    <p>Order #{{ order.id }} — Amount: ₹{{ order.total_price }}</p>
-    <button id="rzp-button" class="btn btn-primary">Pay with Razorpay</button>
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        
+        <!-- Food Image -->
+        {% if order.food.image %}
+        <img src="{{ order.food.image.url }}" class="card-img-top" alt="{{ order.food.food_name }}" style="height: 250px; object-fit: cover;">
+        {% else %}
+        <img src="{% static 'images/no-image.png' %}" class="card-img-top" alt="No image" style="height: 250px; object-fit: cover;">
+        {% endif %}
+        
+        <!-- Header -->
+        <div class="card-header bg-gradient text-white text-center py-3" style="background: linear-gradient(135deg, #4e54c8, #8f94fb);">
+          <h4 class="mb-0 fw-bold">Complete Your Payment</h4>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body p-4">
+          <p class="text-muted text-center mb-3">Order <span class="fw-semibold">#{{ order.id }}</span></p>
+          <p class="text-center display-6 fw-bold text-success">₹{{ order.total_price }}</p>
+          
+          <ul class="list-group list-group-flush mb-4 shadow-sm">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Food Item
+              <span class="fw-semibold">{{ order.food.food_name }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Quantity
+              <span class="fw-semibold">{{ order.quantity }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Status
+              <span class="badge bg-warning text-dark">{{ order.status }}</span>
+            </li>
+          </ul>
+
+          <div class="d-grid">
+            <button id="rzp-button" class="btn btn-primary btn-lg fw-bold text-white" style="background: linear-gradient(135deg, #4e54c8, #8f94fb); border: none; padding: 0.75rem;">
+              <i class="bi bi-credit-card-fill me-2"></i> Pay with Razorpay
+            </button>
+          </div>
+
+          <p class="text-center text-muted mt-3 mb-0 small">
+            Safe and secure payment powered by Razorpay
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
 
 <!-- Razorpay checkout script -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

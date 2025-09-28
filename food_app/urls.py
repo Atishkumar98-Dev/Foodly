@@ -22,6 +22,7 @@ urlpatterns = [
     path('ingredients/add/', views.add_ingredient, name='add_ingredient'),
     path('ingredients/edit/<int:id>/', views.edit_ingredient, name='edit_ingredient'),
     path('ingredients/delete/<int:id>/', views.delete_ingredient, name='delete_ingredient'),
+    
 
     # Orders
     path('orders/', views.order_list, name='admin_orders'),
@@ -82,4 +83,20 @@ urlpatterns = [
     path('register/', views.user_register, name='register'),
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
+    path('admin/analytics/', views.analytics_dashboard, name='analytics_dashboard'),
+    path('cart/', views.cart_view, name='cart_view'),
+    path('cart/add/<int:food_id>/', views.add_to_cart, name='add_to_cart'),
+    path('cart/update/<int:item_id>/<str:action>/', views.update_cart_item, name='update_cart_item'),
+    path('cart/checkout/', views.checkout_cart, name='checkout_cart'),
+    path('cart/add/<int:food_id>/', views.add_to_cart, name='add_to_cart'),
+    path('cart/remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/update/<int:item_id>/', views.update_cart_quantity, name='update_cart_quantity'),
+    path('checkout-success/', views.checkout_success, name='checkout_success'),
+    path('checkout-failure/', views.checkout_failure, name='checkout_failure'),
+    path('cart/success/', views.cart_payment_success, name='cart_payment_success'),
+    path('cart/failure/', views.checkout_failure, name='cart_payment_failure'),
+    path('cart/success/full/', views.cart_success, name='cart_success'),
+    path('user/order/lists/', views.cart_success, name='order_list'),
+    path('user/order/order_lists_complete/', views.orders_list_user, name='order_lists_complete'),
+
 ]

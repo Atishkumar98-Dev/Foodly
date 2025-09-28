@@ -46,6 +46,8 @@
             Admin Dashboard
         </div>
         <nav class="nav flex-column">
+
+            <a href="{% url 'analytics_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics_dashboard' %}active{% endif %}">Analytics</a>
             <a href="{% url 'admin_food' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_food' %}active{% endif %}">Foods</a>
             <a href="{% url 'admin_ingredient' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_ingredient' %}active{% endif %}">Ingredients</a>
             <a href="{% url 'admin_tag' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_tag' %}active{% endif %}">Tags</a>
@@ -53,8 +55,8 @@
             <a href="{% url 'admin_stock' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_stock' %}active{% endif %}">Stock</a>
             <a href="{% url 'admin_allergy' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_allergy' %}active{% endif %}">Allergies</a>
             <a href="{% url 'admin_order' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_order' %}active{% endif %}">Orders</a>
-            <a href="{% url 'food_list' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_order' %}active{% endif %}">Food lists</a>
-            <a href="{% url 'admin_nutrition' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_order' %}active{% endif %}">Nutrition</a>
+            <a href="{% url 'food_list' %}" class="nav-link {% if request.resolver_match.url_name == 'food_list' %}active{% endif %}">Food lists</a>
+            <a href="{% url 'admin_nutrition' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_nutrition' %}active{% endif %}">Nutrition</a>
             
 
         </nav>

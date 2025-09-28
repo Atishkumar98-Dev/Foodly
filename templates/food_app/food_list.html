@@ -2,136 +2,150 @@
 {% load static %}
 {% block content %}
 
-<!-- ====== Styles (Bootstrap used from base; additional CSS below) ====== -->
 <style>
-  :root{
+  :root {
     --accent: #0d6efd;
     --muted: #6c757d;
-    --card-radius: 12px;
+    --card-radius: 14px;
   }
 
-  .page-container{
-    margin: 28px auto;
+  .page-container {
+    margin: 32px auto;
     max-width: 1200px;
     padding: 0 16px;
   }
 
+  /* Hero section */
   .hero {
     display:flex;
     justify-content:space-between;
-    align-items:center;
+    align-items:flex-end;
     gap:1rem;
-    margin-bottom: 18px;
+    margin-bottom: 22px;
   }
-  .hero .title {
-    margin:0;
-  }
-  .hero .subtitle { color: var(--muted); font-size: .95rem; margin-top:4px; }
+  .hero .title { margin:0; font-weight:700; }
+  .hero .subtitle { color: var(--muted); font-size: .95rem; }
 
   .search-row {
     display:flex;
     gap:.5rem;
-    align-items:center;
   }
   .search-row .form-control { min-width:220px; }
 
-  /* Grid and cards */
+  /* Grid */
   .grid {
     display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1.5rem;
   }
 
+  /* Food card */
   .card-food {
-    border: 1px solid #e9ecef;
+    border: 1px solid #edf0f3;
     border-radius: var(--card-radius);
-    overflow: hidden;
-    background: #fff;
-    transition: transform .18s ease, box-shadow .18s ease;
+    background:#fff;
+    overflow:hidden;
     display:flex;
     flex-direction:column;
-    min-height: 100%;
+    transition: all .22s ease;
+    box-shadow:0 2px 4px rgba(15,23,42,0.02);
   }
   .card-food:hover {
     transform: translateY(-6px);
-    box-shadow: 0 14px 30px rgba(15,23,42,0.07);
+    box-shadow: 0 14px 28px rgba(15,23,42,0.08);
   }
 
   .media {
-    height:160px;
-    background: linear-gradient(180deg, #fafbfd, #f8fafc);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
+    height:170px;
+    background: linear-gradient(180deg, #f9fbfc, #f1f5f9);
     position:relative;
+    overflow:hidden;
   }
-  .media img { width:100%; height:100%; object-fit:cover; display:block; }
+  .media img { width:100%; height:100%; object-fit:cover; }
 
   .badge-cat {
     position:absolute;
-    left:12px;
     top:12px;
-    background: rgba(0,0,0,0.6);
+    left:12px;
+    background:rgba(0,0,0,0.65);
     color:#fff;
-    padding:.28rem .5rem;
-    border-radius:8px;
+    padding:.3rem .55rem;
     font-size:.78rem;
+    border-radius:6px;
   }
 
-  .card-body-food{
-    padding: .85rem;
+  .card-body-food {
+    padding: 1rem;
     display:flex;
     flex-direction:column;
-    gap:.45rem;
-    flex:1 1 auto;
+    gap:.55rem;
+    flex:1;
   }
 
-  .food-name { font-size:1.02rem; font-weight:600; margin:0; color:#0f1724; }
-  .food-desc { color:var(--muted); font-size:.92rem; min-height:2.1em; overflow:hidden; }
-  .food-meta { display:flex; justify-content:space-between; align-items:center; gap:.5rem; margin-top:auto; }
+  .food-name { font-size:1.05rem; font-weight:600; margin:0; color:#1e293b; }
+  .food-desc { color:var(--muted); font-size:.9rem; line-height:1.35; min-height:2.1em; }
+
   .price-pill {
+    display:inline-block;
     background: linear-gradient(90deg,#198754,#1cc88a);
-    color:#fff; padding:.33rem .65rem; border-radius:8px; font-weight:700;
+    color:#fff;
+    padding:.35rem .7rem;
+    border-radius:8px;
+    font-weight:700;
+    font-size:.9rem;
   }
 
-  .tags { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.4rem; }
-  .tag { background:#f1f3f5; color:#212529; padding:.22rem .45rem; border-radius:999px; font-size:.78rem; }
-
-  /* Empty / fallback */
-  .no-items {
-    text-align:center; padding:48px 10px; color:var(--muted);
+  .availability {
+    font-size:.82rem;
+    font-weight:600;
   }
 
-  /* Pagination area */
-  .pagination-wrap { margin-top:20px; display:flex; justify-content:center; }
+  .tags { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.3rem; }
+  .tag { background:#f8f9fa; color:#495057; padding:.25rem .5rem; border-radius:999px; font-size:.75rem; }
+  .calorie { font-size:.75rem; color:var(--muted); margin-left:auto; }
 
-  /* Quick view modal tweaks */
-  .modal-food-img { width:100%; height:240px; object-fit:cover; border-radius:8px; }
-  @media (max-width:575px){
-    .media { height:140px; }
-    .modal-food-img { height:180px; }
+  .food-meta {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:auto;
+  }
+  .food-meta .btn { transition:all .2s ease; }
+  .food-meta .btn:hover { transform:translateY(-2px); }
+
+  /* Empty state */
+  .no-items { text-align:center; padding:50px 10px; }
+  .no-items h4 { font-weight:600; }
+
+  /* Quick View Modal */
+  .modal-food-img { width:100%; height:250px; object-fit:cover; border-radius:8px; }
+  .modal-body p { font-size:.95rem; line-height:1.5; }
+  @media (max-width:575px) {
+    .media { height:150px; }
+    .modal-food-img { height:190px; }
   }
 </style>
 
-<!-- ====== Page ====== -->
 <div class="page-container">
+  <!-- Hero / search -->
   <div class="hero">
     <div>
-      <h1 class="title h4">Available Foods</h1>
-      <div class="subtitle">Browse delicious items. Order or preview quickly.</div>
+      <h1 class="title h4">🍴 Available Foods</h1>
+      <div class="subtitle">Browse, preview, and order your favorites instantly.</div>
     </div>
 
-    <form method="get" class="search-row" role="search" aria-label="Search foods">
-      <input name="q" value="{{ request.GET.q|default:'' }}" class="form-control form-control-sm" type="search" placeholder="Search foods, tags or category">
-      <button class="btn btn-sm btn-outline-primary" type="submit">Search</button>
+    <form method="get" class="search-row" role="search">
+      <input name="q" value="{{ request.GET.q|default:'' }}" 
+             class="form-control form-control-sm" 
+             type="search" placeholder="Search foods, tags or category">
+      <button class="btn btn-sm btn-outline-primary">Search</button>
     </form>
   </div>
 
   {% if foods %}
   <div class="grid">
     {% for food in foods %}
-    <article class="card-food" 
+    <article class="card-food"
              data-id="{{ food.id }}"
              data-name="{{ food.food_name|escapejs }}"
              data-desc="{{ food.description|default:'No description.'|escapejs }}"
@@ -147,42 +161,40 @@
       </div>
 
       <div class="card-body-food">
-        <div>
-          <a href="{% url 'food_detail' food.id %}" class="text-decoration-none text-dark">
-            <h3 class="food-name">{{ food.food_name }}</h3>
-          </a>
-          <p class="food-desc">{{ food.description|truncatechars:110 }}</p>
+        <a href="{% url 'food_detail' food.id %}" class="text-decoration-none">
+          <h3 class="food-name">{{ food.food_name }}</h3>
+        </a>
+        <p class="food-desc">{{ food.description|truncatechars:110 }}</p>
+
+        <div class="d-flex align-items-center gap-2">
           <span class="price-pill">₹{{ food.price }}</span>
           {% if food.available %}
-              <span class="badge bg-success">Available</span>
-            {% else %}
-              <span class="badge bg-danger">Unavailable</span>
-            {% endif %}
+            <span class="availability text-success">Available</span>
+          {% else %}
+            <span class="availability text-danger">Unavailable</span>
+          {% endif %}
         </div>
 
         <div class="tags">
-          
           {% for tag in food.tags.all %}
             <span class="tag">{{ tag.name }}</span>
           {% empty %}
             <span class="tag">No tags</span>
           {% endfor %}
-          <small class="ms-2 text-muted">{{ food.calories|default:"—" }} kcal</small>
-          
+          <span class="calorie">{{ food.calories|default:"—" }} kcal</span>
         </div>
 
         <div class="food-meta">
-          <div>
-            
-            <button type="button" class="btn btn-sm btn-outline-secondary quick-view-btn" data-bs-toggle="modal" data-bs-target="#quickViewModal">Quick View</button>
-          </div>
-
-          <div class="d-flex align-items-center">
-            
-            <div class="ms-2">
-              <a href="{% url 'place_order' food.id %}" class="btn btn-sm btn-primary ms-1">Order</a>
-              
-            </div>
+          <button type="button" 
+                  class="btn btn-sm btn-outline-secondary quick-view-btn" 
+                  data-bs-toggle="modal" data-bs-target="#quickViewModal">
+            Quick View
+          </button>
+          <div class="d-flex gap-2">
+            <a href="{% url 'place_order' food.id %}" class="btn btn-sm btn-primary">Order</a>
+            <a href="{% url 'add_to_cart' food.id %}" class="btn btn-sm btn-success">
+              <i class="bi bi-cart-plus"></i> Add
+            </a>
           </div>
         </div>
       </div>
@@ -190,14 +202,12 @@
     {% endfor %}
   </div>
 
-  <!-- Pagination (keeping your existing context variables) -->
+  <!-- Pagination -->
   {% if is_paginated %}
-  <div class="pagination-wrap">
+  <div class="pagination-wrap mt-4">
     <ul class="pagination">
       {% if page_obj.has_previous %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
-        </li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a></li>
       {% else %}
         <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
       {% endif %}
@@ -211,9 +221,7 @@
       {% endfor %}
 
       {% if page_obj.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
-        </li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a></li>
       {% else %}
         <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
       {% endif %}
@@ -231,24 +239,24 @@
   {% endif %}
 </div>
 
-<!-- ====== Quick View Modal ====== -->
+<!-- Quick View Modal -->
 <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="qv-title">Item</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content border-0 shadow-lg rounded-3">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-semibold" id="qv-title">Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="row g-3">
+        <div class="row g-4 align-items-center">
           <div class="col-md-6">
             <img id="qv-img" src="{% static 'images/no-image.png' %}" alt="Image" class="modal-food-img">
           </div>
           <div class="col-md-6">
             <p id="qv-cat" class="small text-muted mb-2"></p>
             <p id="qv-desc" class="mb-3"></p>
-            <p><strong>Price: </strong><span id="qv-price" class="text-success"></span></p>
-            <a id="qv-order" href="#" class="btn btn-primary">Order Now</a>
+            <p><strong>Price: </strong><span id="qv-price" class="text-success fw-bold"></span></p>
+            <a id="qv-order" href="#" class="btn btn-primary w-100">Order Now</a>
           </div>
         </div>
       </div>
@@ -256,30 +264,21 @@
   </div>
 </div>
 
-<!-- ====== Scripts (Bootstrap bundle assumed in base; include small JS) ====== -->
 <script>
-  // Quick View: populate modal using data-* attributes on card
-  document.addEventListener('click', function (e) {
+  // Quick View: populate modal
+  document.addEventListener('click', e => {
     const btn = e.target.closest('.quick-view-btn');
     if (!btn) return;
     const card = btn.closest('.card-food');
     if (!card) return;
 
     const id = card.dataset.id || '';
-    const name = card.dataset.name || '';
-    const desc = card.dataset.desc || '';
-    const price = card.dataset.price || '';
-    const img = card.dataset.img || '';
-
-    document.getElementById('qv-title').textContent = name;
-    document.getElementById('qv-desc').textContent = desc;
-    document.getElementById('qv-price').textContent = '₹' + price;
-    document.getElementById('qv-img').src = img;
-    // Update category if present
-    const cat = card.querySelector('.badge-cat') ? card.querySelector('.badge-cat').textContent : '';
+    document.getElementById('qv-title').textContent = card.dataset.name || '';
+    document.getElementById('qv-desc').textContent = card.dataset.desc || '';
+    document.getElementById('qv-price').textContent = '₹' + (card.dataset.price || '');
+    document.getElementById('qv-img').src = card.dataset.img || '';
+    const cat = card.querySelector('.badge-cat')?.textContent || '';
     document.getElementById('qv-cat').textContent = cat;
-
-    // Set order link (no Python change here — keep same URL pattern)
     document.getElementById('qv-order').href = "{% url 'place_order' 0 %}".replace('/0/', '/' + id + '/');
   });
 </script>

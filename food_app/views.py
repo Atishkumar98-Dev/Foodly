@@ -1,3 +1,10 @@
+
+from django.db import transaction
+from .razorpay_tester  import _generate_order_ref
+from django.shortcuts import render
+from django.db.models import Sum, Count
+from django.utils.timezone import now, timedelta
+from .models import Order, Food, Stock
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Food, Menu, MealPlan, Order
@@ -555,3 +562,336 @@ def user_register(request):
         form = UserRegistrationForm()
 
     return render(request, 'food_app/register.html', {'form': form})
+
+
+def analytics_dashboard(request):
+    # ---------- Top Metrics ----------
+    total_orders = Order.objects.count()
+    total_revenue = Order.objects.aggregate(total=Sum('total_price'))['total'] or 0
+    total_foods = Food.objects.count()
+    pending_orders = Order.objects.filter(status='PENDING').count()
+
+    # ---------- Popular Foods ----------
+    popular_foods = (
+        Food.objects.annotate(
+            order_count=Count('order'),
+            revenue=Sum('order__total_price')
+        )
+        .order_by('-order_count')[:10]
+    )
+
+    # ---------- Stock Levels ----------
+    stocks = Stock.objects.select_related('food').all().order_by('food__food_name')
+
+    # ---------- Orders & Revenue per Day for last 30 days ----------
+    today = now().date()
+    start_date = today - timedelta(days=29)
+
+    # Orders per day
+    orders_per_day_qs = (
+        Order.objects.filter(ordered_at__date__gte=start_date)
+        .extra({'day': "date(ordered_at)"})
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    orders_dates = [o['day'] for o in orders_per_day_qs]  # no strftime
+    orders_count = [o['count'] for o in orders_per_day_qs]
+
+    # Revenue per day
+    revenue_per_day_qs = (
+        Order.objects.filter(ordered_at__date__gte=start_date)
+        .extra({'day': "date(ordered_at)"})
+        .values('day')
+        .annotate(revenue=Sum('total_price'))
+        .order_by('day')
+    )
+    revenue_dates = [r['day'] for r in revenue_per_day_qs]  # keep as string
+    revenue_amounts = [float(r['revenue'] or 0) for r in revenue_per_day_qs]
+
+
+    context = {
+        'total_orders': total_orders,
+        'total_revenue': total_revenue,
+        'total_foods': total_foods,
+        'pending_orders': pending_orders,
+        'popular_foods': popular_foods,
+        'stocks': stocks,
+        'orders_dates': orders_dates,
+        'orders_count': orders_count,
+        'revenue_dates': revenue_dates,
+        'revenue_amounts': revenue_amounts,
+    }
+
+    return render(request, 'food_app/analytics.html', context)
+
+
+
+# Cart & Wishlist - (Could be implemented with sessions or models)
+
+# views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Food, CartItem
+
+@login_required
+def add_to_cart(request, food_id):
+    food = get_object_or_404(Food, id=food_id)
+    cart_item, created = CartItem.objects.get_or_create(user=request.user, food=food)
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
+    return redirect('cart_view')
+
+@login_required
+def cart_view(request):
+    cart_items = CartItem.objects.filter(user=request.user)
+    for item in cart_items:
+        item.total_price = item.food.price * item.quantity
+    cart_total = sum([item.total_price for item in cart_items])
+    razorpay_amount = int(cart_total * 100)  # Razorpay expects amount in paise
+    context = {
+        'cart_items': cart_items,
+        'cart_total': cart_total,
+        'razorpay_amount': razorpay_amount,
+    }
+    total = sum(item.total_price for item in cart_items)
+    return render(request, 'food_app/cart.html', context)
+
+@login_required
+def update_cart_item(request, item_id, action):
+    item = get_object_or_404(CartItem, id=item_id, user=request.user)
+    if action == 'increase':
+        item.quantity += 1
+        item.save()
+    elif action == 'decrease':
+        if item.quantity > 1:
+            item.quantity -= 1
+            item.save()
+        else:
+            item.delete()
+    elif action == 'remove':
+        item.delete()
+    return redirect('cart_view')
+
+# views.py
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Cart, Order, Food
+from django.conf import settings
+import razorpay
+from django.utils import timezone
+
+
+
+
+@login_required
+def checkout_cart(request):
+    """
+    Show checkout page for current user's cart.
+    Creates a Razorpay Order server-side and passes the id + amount to the template.
+    """
+    user = request.user
+    # get cart items for logged-in user (use session_key fallback if you implemented anonymous carts)
+    cart_items = CartItem.objects.filter(user=user).select_related('food')
+
+    # If cart is empty, show empty cart template
+    if not cart_items.exists():
+        return render(request, 'food_app/empty_cart.html')
+
+    # Calculate total (Decimal for currency safety)
+    total_amount = sum((item.food.price * item.quantity) for item in cart_items)
+    # Ensure Decimal -> float handling if price is DecimalField
+    total_amount = Decimal(total_amount)
+
+    # Razorpay wants amount in paise (integer)
+    razorpay_amount = int(total_amount * 100)
+
+    # Create a Razorpay order (recommended - you can also skip and allow client to create)
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    try:
+        razorpay_order = client.order.create({
+            "amount": razorpay_amount,
+            "currency": "INR",
+            "payment_capture": 1,  # auto-capture
+            "receipt": f"cart_rcpt_{user.id}_{int(timezone.now().timestamp())}"
+        })
+    except Exception as e:
+        # log and show friendly message
+        # logger.exception("Razorpay order creation failed")
+        messages.error(request, "Payment provider is currently unavailable. Please try again later.")
+        return render(request, 'food_app/cart.html', {'cart_items': cart_items, 'total_amount': total_amount})
+
+    # Pass everything the template needs
+    context = {
+        'cart_items': cart_items,
+        'cart_total': total_amount,
+        'razorpay_amount': razorpay_amount,
+        'razorpay_order_id': razorpay_order.get('id'),
+        'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+    }
+
+    return render(request, 'food_app/checkout_cart.html', context)
+
+
+
+# Add item to cart
+@login_required
+def add_to_cart(request, food_id):
+    food = get_object_or_404(Food, id=food_id)
+    cart_item, created = CartItem.objects.get_or_create(user=request.user, food=food)
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
+    return redirect('cart_view')
+
+
+# Remove item from cart
+@login_required
+def remove_from_cart(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id, user=request.user)
+    item.delete()
+    return redirect('cart_view')
+
+
+# Update cart quantity
+@login_required
+def update_cart_quantity(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id, user=request.user)
+    if request.method == "POST":
+        if 'increase' in request.POST:
+            item.quantity += 1
+        elif 'decrease' in request.POST and item.quantity > 1:
+            item.quantity -= 1
+        else:
+            item.quantity = int(request.POST.get('quantity', item.quantity))
+        item.save()
+    return redirect('cart_view')
+
+
+# Cart view
+@login_required
+def cart_view(request):
+    cart_items = CartItem.objects.filter(user=request.user)
+    cart_total = sum([item.total_price for item in cart_items])
+    return render(request, 'food_app/cart.html', {'cart_items': cart_items, 'cart_total': cart_total})
+
+
+
+# Razorpay success
+@login_required
+def checkout_success(request):
+    orders = Order.objects.select_related('food', 'user').all()
+    payment_id = request.POST.get('payment_id')
+    # Create orders for each cart item
+    print(payment_id)
+    
+    cart_items = CartItem.objects.filter(user=request.user)
+    for item in cart_items:
+        Order.objects.create(
+            user=request.user,
+            food=item.food,
+            quantity=item.quantity
+        )
+    # Clear cart
+    con = {'orders': orders}
+    cart_items.delete()
+    return render(request, 'food_app/checkout_success.html', con)
+
+
+# Razorpay failure
+@login_required
+def checkout_failure(request):
+    return render(request, 'food_app/checkout_failure.html')
+
+@csrf_exempt  # if this will be called directly by client JS fetch; see note below
+@login_required
+def cart_payment_success(request):
+    """
+    Verify Razorpay signature sent from client after checkout success.
+    Expects POST with: razorpay_payment_id, razorpay_order_id, razorpay_signature
+    On success: create Orders (or update existing temporary order records), clear cart, and respond.
+    """
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Invalid method")
+
+    payment_id = request.POST.get('razorpay_payment_id')
+    razorpay_order_id = request.POST.get('razorpay_order_id')
+    signature = request.POST.get('razorpay_signature')
+
+    if not (payment_id and razorpay_order_id and signature):
+        return HttpResponseBadRequest("Missing payment information")
+
+    # Verify signature using razorpay client
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    params = {
+        'razorpay_order_id': razorpay_order_id,
+        'razorpay_payment_id': payment_id,
+        'razorpay_signature': signature
+    }
+    try:
+        client.utility.verify_payment_signature(params)
+    except razorpay.errors.SignatureVerificationError as e:
+        # logger.exception("Razorpay signature verification failed")
+        return JsonResponse({'status': 'error', 'message': 'Signature verification failed'}, status=400)
+
+    # Signature verified -> create Orders from cart items
+    user = request.user
+    cart_items = CartItem.objects.filter(user=user).select_related('food')
+    
+    orders = []
+    with transaction.atomic():
+        for item in cart_items:
+            order_ref = _generate_order_ref()
+            order = Order.objects.create(
+                user=user,
+                food=item.food,
+                quantity=item.quantity,
+                total_price=item.food.price * item.quantity,
+                status='CONFIRMED',
+                razorpay_order_id=razorpay_order_id,
+                razorpay_payment_id=payment_id,
+                razorpay_signature=signature,
+                order_ref=order_ref,
+            )
+            orders.append(order)
+        # clear cart after creating orders
+        cart_items.delete()
+
+    # Save payment ids to orders OR a single payment record (optional)
+    # If you want to attach Razorpay ids to each order:
+    for o in orders:
+        o.razorpay_order_id = razorpay_order_id
+        o.razorpay_payment_id = payment_id
+        o.razorpay_signature = signature
+        o.save(update_fields=['razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature'])
+
+    # Return JSON success; client JS can redirect to a success page
+    return JsonResponse({'status': 'success', 'message': 'Payment verified', 'payment_id': payment_id, 'orders': [o.id for o in orders]})
+
+
+
+@login_required
+def cart_success(request):
+    payment_id = request.GET.get('payment_id')
+    if not payment_id:
+        # fallback: show last few orders for user if payment_id missing
+        orders = Order.objects.filter(user=request.user).order_by('-ordered_at')[:10]
+        msg = "Here are your recent orders."
+    else:
+        orders = Order.objects.filter(user=request.user, razorpay_payment_id=payment_id).order_by('-ordered_at')
+        msg = f"Payment ID: {payment_id}"
+
+    return render(request, 'food_app/cart_success.html', {
+        'payment_id': payment_id,
+        'orders': orders,
+        'message': msg
+    })
+
+
+def orders_list_user(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    # orders = Order.objects.filter(user=request.user).order_by('-ordered_at')
+    orders = Order.objects.select_related('food', 'user').all()
+    return render(request, 'food_app/user_orders.html', {'orders': orders})

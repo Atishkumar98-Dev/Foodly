@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  :root {
+    --accent: #0d6efd;
+    --success: #198754;
+    --danger: #dc3545;
+    --muted: #6c757d;
+    --card-radius: 12px;
+  }
+
+  .orders-page {
+    max-width: 1000px;
+    margin: 32px auto;
+    padding: 0 16px;
+  }
+
+  .orders-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 20px;
+  }
+  .orders-header h2 { margin:0; font-weight:700; }
+  .orders-header .subtitle { color:var(--muted); font-size:.95rem; }
+
+  .order-card {
+    border:1px solid #e9ecef;
+    border-radius: var(--card-radius);
+    background:#fff;
+    margin-bottom:20px;
+    overflow:hidden;
+    box-shadow:0 4px 10px rgba(0,0,0,.04);
+    transition: all .2s ease;
+  }
+  .order-card:hover { transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.07); }
+
+  .order-header {
+    background:#f8f9fa;
+    padding:12px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .order-id { font-weight:600; }
+  .order-date { color:var(--muted); font-size:.85rem; }
+
+  .order-body {
+    padding:16px;
+  }
+  .order-items {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .order-item {
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .order-item img {
+    width:64px; height:64px; object-fit:cover; border-radius:8px;
+    border:1px solid #e9ecef;
+  }
+  .order-item-info { flex:1; }
+  .order-item-info h6 { margin:0; font-size:.95rem; font-weight:600; }
+  .order-item-info p { margin:0; font-size:.85rem; color:var(--muted); }
+  .order-item-price { font-weight:600; color:#1e293b; }
+
+  .order-footer {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-top:1px solid #e9ecef;
+    padding:12px 16px;
+  }
+  .status-badge {
+    font-size:.8rem;
+    padding:.35rem .7rem;
+    border-radius:999px;
+    font-weight:600;
+  }
+  .status-pending { background:#fff3cd; color:#856404; }
+  .status-success { background:#d4edda; color:#155724; }
+  .status-cancelled { background:#f8d7da; color:#721c24; }
+
+  .total-amt { font-weight:700; color:var(--accent); }
+
+  /* Empty state */
+  .no-orders {
+    text-align:center;
+    padding:60px 20px;
+  }
+  .no-orders img { max-width:200px; opacity:.65; }
+  .no-orders h3 { margin-top:16px; font-weight:600; }
+  .no-orders p { color:var(--muted); }
+</style>
+
+<div class="orders-page">
+  <div class="orders-header">
+    <div>
+      <h2>My Orders</h2>
+      <div class="subtitle">Track your past and current orders here.</div>
+    </div>
+  </div>
+
+  {% if orders %}
+    {% for order in orders %}
+    <div class="order-card">
+      <div class="order-header">
+        <div>
+          <span class="order-id">#Order{{ order.id }}</span>
+          <span class="order-date">• {{ order.created_at|date:"M d, Y H:i" }}</span>
+        </div>
+        <span class="status-badge 
+          {% if order.status == 'Pending' %}status-pending
+          {% elif order.status == 'Completed' %}status-success
+          {% elif order.status == 'Cancelled' %}status-cancelled
+          {% endif %}">
+          {{ order.status }}
+        </span>
+      </div>
+
+      <div class="order-body">
+        <div class="order-items">
+            {{order}}
+          <div class="order-item">
+            {% if order.image.url %}
+              <img src="{{ order.food_image.url }}" alt="{{ order.food_name }}">
+            {% else %}
+              <img src="{% static 'images/no-image.png' %}" alt="No image">
+            {% endif %}
+            <div class="order-item-info">
+              <h6>{{ order.food_name }}</h6>
+              <p>Qty: {{ order.quantity }}</p>
+            </div>
+            <div class="order-item-price">₹{{ order.total_price }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-footer">
+        <div class="text-muted small">Payment: {{ order.payment_id|default:"N/A" }}</div>
+        <div class="total-amt">Total: ₹{{ order.total_amount }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="no-orders">
+      <img src="{% static 'images/empty_orders.svg' %}" alt="No orders">
+      <h3>No Orders Yet</h3>
+      <p>Browse delicious foods and place your first order now.</p>
+      <a href="{% url 'food_list' %}" class="btn btn-primary mt-2">Order Now</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

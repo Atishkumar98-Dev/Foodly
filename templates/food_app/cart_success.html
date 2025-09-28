@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="card mx-auto" style="max-width:720px;">
+    <div class="card-body">
+      <img src="{% static 'img/success.png' %}" alt="Success" style="width:120px; margin-top:-60px;" class="mb-3">
+      <h2 class="text-success">Payment Successful 🎉</h2>
+      <p class="text-muted">{{ message }}</p>
+
+      {% if payment_id %}
+      <p><strong>Payment Reference:</strong> <code>{{ payment_id }}</code></p>
+      {% endif %}
+
+      <hr class="my-4">
+
+      <h5>Your Orders</h5>
+      {% if orders %}
+        <ul class="list-group list-group-flush mt-3">
+         {% for order in orders %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+            <strong>{{ order.order_ref }}</strong><br>
+            <small class="text-muted">{{ order.food.food_name }} x {{ order.quantity }}</small>
+            </div>
+            <div class="text-end">
+            <div>₹{{ order.total_price }}</div>
+            <small class="text-muted">{{ order.status }}</small>
+            </div>
+        </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted mt-3">No orders found for this payment.</p>
+      {% endif %}
+
+      <div class="mt-4">
+        <a href="{% url 'food_list' %}" class="btn btn-primary me-2">Continue Shopping</a>
+        <a href="{% url 'order_list' %}" class="btn btn-outline-secondary">View All Orders</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
