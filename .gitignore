@@ -1,2 +1,4 @@
 .env
 *food_app_frontend*
+*node_modules*
+*.log
