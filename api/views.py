@@ -19,3 +19,15 @@ def api_foodlist(request):
             serializer.save()   # uses model’s .create()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+@api_view(['GET'])
+def api_food_detail(request, pk):
+    try:
+        food = Food.objects.get(id=pk)
+    except Food.DoesNotExist:
+        return Response({"error": "Food not found"}, status=404)
+
+    serializer = FoodSerializer(food)
+    return Response(serializer.data)

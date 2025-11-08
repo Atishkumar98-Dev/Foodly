@@ -25,4 +25,5 @@ from api import views
 
 urlpatterns = [
    path('foodlist/', views.api_foodlist, name='api_foodlist'),
+    path('foodlist/<int:pk>/', views.api_food_detail, name='api_food_detail'),
 ]
